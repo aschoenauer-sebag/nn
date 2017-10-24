@@ -1,10 +1,12 @@
---
--- Created by IntelliJ IDEA.
--- User: Alice Schoenauer Sebag
+-- MMD CRITERION
+-- Created by: Alice Schoenauer Sebag
 -- Date: 22/10/17
--- Time: 09:45
--- To change this template use File | Settings | File Templates.
---
+-- Torch version of MMD criterion. Two improvements with 'raw' MMD [Gretton et al., 2012]
+    -- a. Approximating each kernel embeddings by low-dimension projections according to Bochner thm as described
+        --in [Lopez-Paz et al., 2015] sec. 3.3, 
+    -- b. Using multiple kernel bandwidths to alleviate the dependency on sample size, as described
+        --in [Goudet et al., 2017] sec 4.1
+-- Tested using nn.test.criterionJacobianTest, gradients should be correct
 
 local ApproxMMDCriterion, parent = torch.class('nn.ApproxMMDCriterion', 'nn.Criterion')
 
