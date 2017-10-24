@@ -207,6 +207,7 @@ require('nn.CrossEntropyCriterion')
 require('nn.ParallelCriterion')
 require('nn.DistanceRatioCriterion')
 require('nn.ModuleCriterion')
+require('nn.ApproxMMDCriterion')
 
 require('nn.PixelShuffle')
 
