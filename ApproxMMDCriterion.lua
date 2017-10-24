@@ -66,7 +66,8 @@ function ApproxMMDCriterion:updateOutput(input,y)
         self.output = self.output + self.gradBuffer[j]^2
     end
     
-    return self.output*4/(self.num_basis_vectors^2 * batchsize^2 * self.ngamma^2)
+    self.output = self.output*4/(self.num_basis_vectors^2 * batchsize^2 * self.ngamma^2)
+    return self.output
 end
 
 function ApproxMMDCriterion:updateGradInput(input, y)
@@ -84,7 +85,8 @@ function ApproxMMDCriterion:updateGradInput(input, y)
         end
     end
 
-   return self.gradInput * 8 /(self.num_basis_vectors^2 * batchsize^2 * self.ngamma^2)
+   self.gradInput = self.gradInput * 8 /(self.num_basis_vectors^2 * batchsize^2 * self.ngamma^2)
+   return self.gradInput
 end
 
 
