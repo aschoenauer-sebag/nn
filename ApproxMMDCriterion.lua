@@ -10,9 +10,10 @@
 
 local ApproxMMDCriterion, parent = torch.class('nn.ApproxMMDCriterion', 'nn.Criterion')
 
-function ApproxMMDCriterion:__init(input_dimension, num_basis_vectors)
+function ApproxMMDCriterion:__init(input_dimension, num_basis_vectors, domain_batchsize)
     parent.__init(self)
 
+    local domain_batchsize = domain_batchsize or 64
     --Attributes specific for approx MMD criterion
     self.input_dimension  = input_dimension or 256
         --All the bandwidths which will be used so that final kernel = sum_gamma rbf kernel(gamma)
@@ -20,7 +21,7 @@ function ApproxMMDCriterion:__init(input_dimension, num_basis_vectors)
         --Pick nb of basis vectors to approximate kernel
     self.num_basis_vectors = num_basis_vectors or 100 
     self.ngamma = self.gammas:size(1)
-    self.buffer = torch.Tensor()
+    self.buffer = torch.Tensor(self.ngamma, self.num_basis_vectors, 2*domain_batchsize)
     self.gradBuffer = torch.Tensor(self.num_basis_vectors)
 
         --Sampling the angles and bias vectors to approximate each kernel
@@ -31,13 +32,6 @@ function ApproxMMDCriterion:__init(input_dimension, num_basis_vectors)
     self.B = torch.rand(self.ngamma, self.num_basis_vectors):mul(2*math.pi)
    
 end
-
---[[ A priori already provided for in parent class
-function ApproxMMDCriterion:cuda()
-    self.thetas = self.thetas:cuda()
-    self.B = self.B:cuda()
-end
- ]]
 
 function ApproxMMDCriterion:product(basis_vector_ind, vec)
     return torch.addmv(self.B[{{}, { basis_vector_ind }}]:resize(self.ngamma),
@@ -55,10 +49,10 @@ end
 function ApproxMMDCriterion:updateOutput(input,y)
     local batchsize = input:size(1)/2
     self.output = 0
-    self.buffer:resize(self.ngamma, self.num_basis_vectors, input:size(1))
+    self.buffer:zero()
+    self.gradBuffer:zero()
 
     for j=1,self.num_basis_vectors do
-        self.gradBuffer[j] = 0
         for i=1, batchsize do
             self.buffer[{{},{j},{i}}] = self:product(j, input[i])
             self.buffer[{{},{j},{batchsize+i}}] = self:product(j, input[batchsize+i])
