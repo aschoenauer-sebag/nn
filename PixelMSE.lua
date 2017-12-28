@@ -21,21 +21,19 @@ end
 
 function PixelMSE:compute_VdF_matrix(target)
     local a,b,c,d = unpack(torch.totable(target:size()))
-    self.V = torch.Tensor():cudaDouble()
+    V = torch.Tensor():cudaDouble()
     for i=1, self.num_bins do
-        self.V = torch.cat(self.V, (target:ge(self.bin_width*(i-1)) + target:lt(self.bin_width*i)):eq(2):cudaDouble(), 5)
+        V = torch.cat(V, (target:ge(self.bin_width*(i-1)) + target:lt(self.bin_width*i)):eq(2):cudaDouble(), 5)
     end
-    self.V=self.V:reshape(a*b*c*d, self.num_bins)
-    self.VdF = torch.mv(self.V:cuda(), self.inv_fqcies):reshape(a,b,c,d)
+    V=V:reshape(a*b*c*d, self.num_bins)
+    self.VdF = torch.mv(V:cuda(), self.inv_fqcies):reshape(a,b,c,d)
 
 end
 
 function PixelMSE:updateOutput(input,target)
     self:compute_VdF_matrix(target)
     --of shape mbx 2 x w x w
-    self.sqrtL = input-target
-
-    self.output = self.sqrtL:clone():pow(2)
+    self.output = (input-target):pow(2)
     self.output = (self.output:cmul(self.VdF)):sum()
     self.output = self.output/input:nElement()
 
@@ -43,7 +41,7 @@ function PixelMSE:updateOutput(input,target)
 end
 
 function PixelMSE:updateGradInput(input, target)
-    self.gradInput = self.sqrtL:cmul(self.VdF):mul(-2/input:nElement())
+    self.gradInput = (input-target):cmul(self.VdF):mul(-2/input:nElement())
    return self.gradInput
 end
 
