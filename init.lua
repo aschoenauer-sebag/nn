@@ -182,6 +182,7 @@ require('nn.Convert')
 
 require('nn.Criterion')
 require('nn.MSECriterion')
+require('nn.PixelMSE')
 require('nn.SpatialAutoCropMSECriterion')
 require('nn.SmoothL1Criterion')
 require('nn.MarginCriterion')
