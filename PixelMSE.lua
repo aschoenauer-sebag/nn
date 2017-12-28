@@ -14,7 +14,6 @@ function PixelMSE:__init(bin_inverse_frequencies, bin_width)
     parent.__init(self)
 
     self.bin_width = bin_width
-
     self.num_bins = bin_inverse_frequencies:size(1)
     self.inv_fqcies = bin_inverse_frequencies
 
@@ -22,12 +21,12 @@ end
 
 function PixelMSE:compute_VdF_matrix(target)
     local a,b,c,d = unpack(torch.totable(target:size()))
-    local V = torch.zeros(a,b,c,d, self.num_bins)
+    self.V = torch.Tensor():cudaDouble()
     for i=1, self.num_bins do
-        V[{{},{},{},{},{i}}] = (target:ge(self.bin_width*(i-1)) + target:lt(self.bin_width*i)):eq(2)
+        self.V = torch.cat(self.V, (target:ge(self.bin_width*(i-1)) + target:lt(self.bin_width*i)):eq(2):cudaDouble(), 5)
     end
-    V=V:reshape(a*b*c*d, self.num_bins)
-    self.VdF = torch.mv(V, self.inv_fqcies):reshape(a,b,c,d)
+    self.V=self.V:reshape(a*b*c*d, self.num_bins)
+    self.VdF = torch.mv(self.V:cuda(), self.inv_fqcies):reshape(a,b,c,d)
 
 end
 
