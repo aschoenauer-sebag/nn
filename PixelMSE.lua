@@ -10,23 +10,22 @@
 
 local PixelMSE, parent = torch.class('nn.PixelMSE', 'nn.Criterion')
 
-function PixelMSE:__init(bin_inverse_frequencies, bin_width)
+function PixelMSE:__init(weights, threshold)
     parent.__init(self)
 
-    self.bin_width = bin_width
-    self.num_bins = bin_inverse_frequencies:size(1)
-    self.inv_fqcies = bin_inverse_frequencies
+    self.num_bins = weights:size(1)
+    self.weights = weights
 
+    self.threshold = threshold
 end
 
 function PixelMSE:compute_VdF_matrix(target)
     local a,b,c,d = unpack(torch.totable(target:size()))
-    V = torch.Tensor():cudaDouble()
-    for i=1, self.num_bins do
-        V = torch.cat(V, (target:ge(self.bin_width*(i-1)) + target:lt(self.bin_width*i)):eq(2):cudaDouble(), 5)
-    end
+    local V = torch.cat(
+                target:lt(self.threshold), target:ge(self.threshold), 5
+    )
     V=V:reshape(a*b*c*d, self.num_bins)
-    self.VdF = torch.mv(V:cuda(), self.inv_fqcies):reshape(a,b,c,d)
+    self.VdF = torch.mv(V:cuda(), self.weights):reshape(a,b,c,d)
 
 end
 
