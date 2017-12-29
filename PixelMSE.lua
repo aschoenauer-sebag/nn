@@ -40,7 +40,7 @@ function PixelMSE:updateOutput(input,target)
 end
 
 function PixelMSE:updateGradInput(input, target)
-    self.gradInput = (input-target):cmul(self.VdF):mul(-2/input:nElement())
+    self.gradInput = (input-target):cmul(self.VdF):mul(2/input:nElement())
    return self.gradInput
 end
 
