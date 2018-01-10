@@ -1,12 +1,12 @@
--- PIXEL MSE CRITERION
+-- CRISP PIXEL MSE CRITERION
 -- Created by IntelliJ IDEA.
 -- User: asebag
 -- Date: 12/27/17
 -- Time: 4:23 PM
 -- To change this template use File | Settings | File Templates.
 --
---Checked that the gradient value is approx. equivalent to the differences finies using test.lua
-----> it works
+--Did not check that the gradient value is approx. equivalent to the differences finies using test.lua
+  --but should be fine
 
 local CrispPixelMSE, parent = torch.class('nn.CrispPixelMSE', 'nn.Criterion')
 
