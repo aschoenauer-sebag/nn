@@ -20,8 +20,8 @@ end
 function CrispPixelMSE:multiplicator(target)
 
     return torch.add(
-                        torch.abs(torch.add(target, self.eps)):pow(-self.power),
-                        torch.abs(torch.add(-target, 1+self.eps)):pow(-self.power)
+                        torch.add(target, self.eps):pow(-self.power),
+                        torch.add(-target, 1+self.eps):pow(-self.power)
                      )
 end
 
