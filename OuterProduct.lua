@@ -35,7 +35,7 @@ function OuterProduct:updateGradInput(input, gradOutput)
    local v1 = input[1]
    local v2 = input[2]
    local not_batch = false
-
+   
    if #self.gradInput ~= 2 then
      self.gradInput[1] = self.gradInput[1] or input[1].new()
      self.gradInput[2] = self.gradInput[2] or input[2].new()
@@ -46,15 +46,28 @@ function OuterProduct:updateGradInput(input, gradOutput)
       v2 = v2:view(1,-1)
       not_batch = true
    end
-
-   local gw1 = self.gradInput[1]
-   gw1:bmm(gradOutput, v2)
-
+   
+   --Taking care of grad wrt v2
    local gw2 = self.gradInput[2]
-   gw2:resizeAs(v2)
+   gw2:resize(v2:size(1), 1, v2:size(2))
+   v1 = v1:resize(v1:size(1), 1, v1:size(2))
    for k=1, v2:size(1) do
       gw2[k]:addmm(v1[k], gradOutput[k])
    end
+   --Putting stuff back into correct shape
+   gw2:resizeAs(v2)
+   v1:resize(v1:size(1), v1:size(3))
+
+   --Taking care of grad wrt v1
+   v2 = v2:resize(v2:size(1), v2:size(2), 1)
+   local gw1 = self.gradInput[1]
+   gw1:resize(v1:size(1), v1:size(2), 1)
+   for k=1, v1:size(1) do
+      gw1[k]:addmm(gradOutput[k], v2[k])
+   end
+   --Putting stuff back into correct shape
+   gw1:resizeAs(v1)
+   v2:resize(v2:size(1), v2:size(2))
 
    if not_batch then
       -- unbatch gradInput
