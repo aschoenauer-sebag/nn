@@ -11,7 +11,6 @@ local OuterProduct, parent = torch.class('nn.OuterProduct', 'nn.Module')
 function OuterProduct:__init()
    parent.__init(self)
    self.gradInput = {torch.Tensor(), torch.Tensor() }
-   self.output = nil
 end 
  
 function OuterProduct:updateOutput(input)
@@ -22,8 +21,8 @@ function OuterProduct:updateOutput(input)
       input2 = input2:view(1,-1)
    end
    local nbatch = input1:size(1)
-   if not self.output then
-      self.output = torch.CudaTensor(nbatch, input1:size(2), input2:size(2))
+   if self.output:nElement()==0 then
+      self.output = torch.Tensor(nbatch, input1:size(2), input2:size(2)):typeAs(input1)
    end
    for k=1, nbatch do
        self.output[k]:ger(input1[k], input2[k])
