@@ -10,40 +10,22 @@ local Log_NLLCriterion, Criterion = torch.class('nn.Log_NLLCriterion', 'nn.Crite
 
 function Log_NLLCriterion:__init(weights, sizeAverage)
    Criterion.__init(self)
-   self.lsm = nn.Log()
-   self.nll = nn.ClassNLLCriterion(weights, sizeAverage)
-   self.sizeAverage = self.nll.sizeAverage
-   self.oldSizeAverage = self.sizeAverage
+   self.log = nn.Log()
+   self.negloglik_criterion = nn.ClassNLLCriterion(weights, sizeAverage)
+   self.sizeAverage = self.negloglik_criterion.sizeAverage
 end
 
 function Log_NLLCriterion:updateOutput(input, target)
-   input = input:squeeze()
-   target = type(target) == 'number' and target or target:squeeze()
-   -- only propagate if value has changed to preserve old behavior
-   -- of setting nll.sizeAverage directly
-   if self.sizeAverage ~= self.oldSizeAverage then
-      self.nll.sizeAverage = self.sizeAverage
-   end
-   self.lsm:updateOutput(input)
-   self.nll:updateOutput(self.lsm.output, target)
-   self.output = self.nll.output
-   self.oldSizeAverage = self.sizeAverage
+   local out = self.log:forward(input)
+   self.output = self.negloglik_criterion:forward(out, target)
+
    return self.output
 end
 
 function Log_NLLCriterion:updateGradInput(input, target)
-   local size = input:size()
-   input = input:squeeze()
-   target = type(target) == 'number' and target or target:squeeze()
-   -- only propagate if  value has changed to preserve old behavior
-   -- of setting nll.sizeAverage directly
-   if self.sizeAverage ~= self.oldSizeAverage then
-      self.nll.sizeAverage = self.sizeAverage
-   end
-   self.nll:updateGradInput(self.lsm.output, target)
-   self.lsm:updateGradInput(input, self.nll.gradInput)
-   self.gradInput:view(self.lsm.gradInput, size)
-   self.oldSizeAverage = self.sizeAverage
+   local criDf = self.negloglik_criterion:backward(self.log.output, target)
+   self.gradInput = self.log:backward(input, criDf)
+
    return self.gradInput
 end
 
