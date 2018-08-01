@@ -35,9 +35,9 @@ function OuterProduct:updateGradInput(input, gradOutput)
    local v2 = input[2]
    local not_batch = false
    
-   if #self.gradInput ~= 2 then
-     self.gradInput[1] = input[1].new()--self.gradInput[1] or input[1].new()
-     self.gradInput[2] = input[2].new()--self.gradInput[2] or input[2].new()
+   if #self.gradInput ~= 2 or self.gradInput[1]:nElement()==0 or self.gradInput[2]:nElement()==0 then
+     self.gradInput[1] = input[1].new(input[1]:size())
+     self.gradInput[2] = input[2].new(input[2]:size())
    end
    self.gradInput[1]:zero()
    self.gradInput[2]:zero()
